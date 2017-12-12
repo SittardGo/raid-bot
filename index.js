@@ -227,7 +227,7 @@ class raidJoinBot {
         }
 
         let r = 0,
-            txt = raid.op;
+            txt = `**${raid.op}**`;
 
         txt += `\n${MESSAGES.auto_join_msg}\n`.replace('{ID}', raidId);
 
@@ -235,7 +235,7 @@ class raidJoinBot {
             r++;
             const icon = (ADD_TEAM_ICONS)? this.bot.getTeamIcon(u.team) : ' ';
             const index = (String(r).length < 2)? r+' ' : r;
-            txt += `\n\`${index}| \` ${icon} ${u.username}`;
+            txt += `\n\`${index}|\` ${icon} ${u.username}`;
         });
 
         if (REMOVE_COMMAND) {

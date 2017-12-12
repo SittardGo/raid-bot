@@ -27,7 +27,7 @@ class RaidLists {
         
         const raid = {
             id : this.index,
-            op: raidOP.trim(),
+            op: raidOP.trim().replace('**', ''),
             userId: userId,
             users: [],
             canceled: false,
