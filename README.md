@@ -16,7 +16,7 @@ First edit `SittardGoBot.js` to enter your guild specific id's:
   * admin user id's
   * channel id's
 
-Then edit `index.js` to include your bot token and client id (both specific for your bot, created at discordappdiscordapp.com/developers/). The test id's are optional, these override the standard id's when de flag `DEV_MODE` is set to `true`.
+Then edit `index.js` to include your bot token and client id (both specific for your bot, created at https://appdiscordapp.com/developers/). The test id's are optional, these override the standard id's when de flag `DEV_MODE` is set to `true`.
 
 ```bash
 $ npm install
