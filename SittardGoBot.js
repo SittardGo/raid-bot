@@ -120,6 +120,10 @@ class Bot {
         return client;
     }
 
+    createEmbed(options = {}) {
+        return new Discord.RichEmbed(options);
+    }
+
     getAdminId(name) {
         name = name.toLowerCase();
         

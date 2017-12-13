@@ -226,24 +226,93 @@ class raidJoinBot {
             return;
         }
 
-        let r = 0,
-            txt = `**${raid.op}**`;
+        const op = `**${raid.op}**\n`+
+            MESSAGES.count_users.replace('{COUNT}', raid.users.length)+
+            ' '+MESSAGES.auto_join_msg.replace('{ID}', raidId);
 
-        txt += `\n${MESSAGES.auto_join_msg}\n`.replace('{ID}', raidId);
+        const teams = this.getTeamLists(raid.users);
+        const fields = [];
 
-        raid.users.map(u => {
-            r++;
-            const icon = (ADD_TEAM_ICONS)? this.bot.getTeamIcon(u.team) : ' ';
-            const index = (String(r).length < 2)? r+' ' : r;
-            txt += `\n\`${index}|\` ${icon} ${u.username}`;
+        let missingTeams = ['valor', 'instinct', 'mystic'];
+        
+        teams.map(t => {
+            if (t.length < 1) {
+                return;
+            }
+
+            missingTeams = missingTeams.filter(mt => t[0].team !== mt);
+                        
+            fields.push({
+                name: this.getTeamHeader(t[0].team),
+                value: this.getTeamRows(t),
+                inline: true
+            });
         });
 
-        if (REMOVE_COMMAND) {
-            msgObj.delete().catch(console.error);
+        missingTeams.map(t => {
+            fields.push({
+                name: this.getTeamHeader(t),
+                value: ' - ',
+                inline: true
+            });
+        });
+
+        let color = COLORS.grey;
+
+        switch(teams[0][0].team) {
+            case 'valor'    : color = COLORS.red; break;
+            case 'instinct' : color = COLORS.yellow; break;
+            case 'mystic'   : color = COLORS.blue; break;
         }
 
-        this.bot.reply(msgObj, txt)
+        const card = this.bot.createEmbed({
+            description: op,
+            fields: fields,
+            color: color
+        });
+
+        this.bot.reply(msgObj, card)
             .catch(_ => console.log('error', _));
+    }
+
+    getTeamLists(raidUsers) {
+        const teamIndex = { valor: 0, instinct: 1, mystic: 2 };
+        const teams = [[], [],[]];
+        
+        raidUsers.map(u => {
+            teams[teamIndex[u.team]].push(u);
+        });
+
+        teams.sort((a, b) => a.length - b.length);
+
+        return teams.reverse();
+    }
+
+    getTeamRows(users) {
+        let res = '', i = 0;
+
+        users.map(u => {
+            i++;
+            const txtIndex = (String(i).length < 2)? i+' ' : i;
+            
+            if (i !== 1) { 
+                res += '\n';
+            }
+            
+            res += `\`${txtIndex}|\` ${u.username}`;
+        });
+
+        return res;
+    }
+
+    getTeamHeader(name) {
+        const icon = (ADD_TEAM_ICONS)?
+            this.bot.getTeamIcon(name) : ' ';
+
+        name = icon + ' ' +
+            name.charAt(0).toUpperCase() +
+            name.slice(1);
+        return name;
     }
 
     emitInvalid(searchRes, msgObj, raidId) {
