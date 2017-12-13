@@ -148,7 +148,7 @@ class RaidStats {
                 this.addOrIncrement(raiders, u.userId);
             });
         });
-
+        
         stats.mostRaids   = this.getHighestCountUser(raiders);
         stats.mostOp      = this.getHighestCountUser(raiderOps);
         stats.mostCancled = this.getHighestCountUser(canceledRaiders);
@@ -160,10 +160,17 @@ class RaidStats {
         const ret = { userIds: [], count: 0 };
         
         for (let uId in list) {
-            if (list[uId] >= ret.count) {
-                ret.userIds.push(uId);
-                ret.count = list[uId];
+            if (list[uId] < ret.count) {
+                continue;
             }
+
+            if (list[uId] === ret.count) {
+                ret.userIds.push(uId);
+                continue;
+            }
+
+            ret.userIds = [uId];
+            ret.count = list[uId];
         }
 
         return ret;
