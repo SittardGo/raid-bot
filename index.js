@@ -259,10 +259,12 @@ class raidJoinBot {
 
         let color = COLORS.grey;
 
-        switch(teams[0][0].team) {
-            case 'valor'    : color = COLORS.red; break;
-            case 'instinct' : color = COLORS.yellow; break;
-            case 'mystic'   : color = COLORS.blue; break;
+        if (teams[0][0]) {
+            switch(teams[0][0].team) {
+                case 'valor'    : color = COLORS.red; break;
+                case 'instinct' : color = COLORS.yellow; break;
+                case 'mystic'   : color = COLORS.blue; break;
+            }
         }
 
         const card = this.bot.createEmbed({
