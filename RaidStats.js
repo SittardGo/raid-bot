@@ -122,9 +122,17 @@ class RaidStats {
         log.map(raid => {
             if (raid.canceled) {
                 stats.canceledRaids++;
+                
+                const currCanceledRaiders = [];
                 raid.users.map(u => {
+                    if (currCanceledRaiders.indexOf(u.userId) > -1) {
+                        return;
+                    }
+
+                    currCanceledRaiders.push(u.userId);
                     this.addOrIncrement(canceledRaiders, u.userId);
                 });
+                
                 return;
             }
 
