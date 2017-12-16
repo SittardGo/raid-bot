@@ -241,7 +241,7 @@ class Bot {
             memberTeam = TEAM_ICONS.find(t => t.team === role);
         });
         
-        return (memberTeam.hasOwnProperty(team))? memberTeam.team : '';
+        return (memberTeam.hasOwnProperty('team'))? memberTeam.team : '';
     }
 
     getRegisterURL() {
