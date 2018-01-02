@@ -3,6 +3,42 @@ const fs = require('fs');
 
 const LOG_LOCATION     = './logs/';
 
+/* Rich embed format
+ {
+  "content": "**Dagelijks Raid overzicht**",
+  "embed": {
+    "title": "Raider(s) van de dag",
+    "description": "@Rivo | dartfreak170 | lvl 37 & @Jasper (QforDyslexia|36) & @Davidtjuh • lvl 40 & @Kevin (kmeijers lvl 39) met 2 raids!",
+    "color": 0,
+    "thumbnail": {
+      "url": "https://sittardgo.nl/images/instinct_color.svg"
+    },
+    "fields": [
+      {
+        "name": "Team met meeste raiders",
+        "value": ":valor: Valor met 15 raiders | instinct: 6 | mystic: 10  |"
+      },
+      {
+        "name": "Populairste raid",
+        "value": "Ho-Oh, Borstbeeld, 15:15 met 7 deelnemers"
+      },
+      {
+        "name": "Meeste raids gestart",
+        "value": "@Davidtjuh • lvl 40 met 2 raids"
+      },
+      {
+        "name": "Raids gecanceld",
+        "value": "5 raids zijn er gecanceld"
+      },
+      {
+        "name": "Pechvogel(s) van de dag",
+        "value": "@Rivo | dartfreak170 | lvl 37 was opgegeven voor 4 gecancelde raids"
+      }
+    ]
+  }
+}
+*/
+
 const DAILY_MESSAGE = 
 `** Dagelijks Raid overzicht **
 \`-------------------------------\`
@@ -132,7 +168,7 @@ class RaidStats {
                     currCanceledRaiders.push(u.userId);
                     this.addOrIncrement(canceledRaiders, u.userId);
                 });
-                
+
                 return;
             }
 

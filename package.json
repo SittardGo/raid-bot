@@ -11,6 +11,7 @@
     "argparse": "^1.0.9",
     "discord.js": "^11.2.1",
     "eventbusjs": "^0.2.0",
+    "sittard-go-bot": "^1.0.0",
     "uws": "^9.14.0"
   },
   "description": ""

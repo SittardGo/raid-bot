@@ -2,35 +2,33 @@
 
 /**
  * TODO:
- * - @ everyone in list when modbreak is performed
+ * - Mention everyone in list when modbreak is performed
+ * - Uncancel a raid
+ * - Store raidlists intermediate for recovery
  **/
 
-const SittardGoBot = require('./SittardGoBot');
+const SittardGoBot = require('sittard-go-bot');
 const MessageTests = require('./MessageTests');
 const RaidLists    = require('./RaidLists');
 const RaidStats    = require('./RaidStats');
 
-const CLIENT_ID  = '0';
-const TOKEN      = '0';
-
-const TEST_CLIENT_ID = '0';
-const TEST_TOKEN     = '0';
-const TEST_CHANNEL   = '0';
-const TEST_GUILD     = '0';
-
-const VERSION = '1.5';
-const DESCRIPTION = 'A Discord bot to automate raid joining';
-
-const DEV_MODE = false;
+const DEV_MODE = true;
 
 const MESSAGES = {
     missing_raid_id       : 'Raid nummer missend',
     invalid_raid_id       : 'Raid {ID} is niet actief',
     invalid_canceled_raid : 'Raid **{ID}** was gecanceld',
-    mod_operation         : 'Alleen @Moderators kunnen raids aanpassen',
     raid_emition_fail     : 'Er is iets mis gegaan contacteer een Administrator',
+    count_users           : 'Deelnemers: **{COUNT}**',
     auto_join_msg         : '`(auto-join met +{ID})`',
     raid_cancelled        : 'Raid nr. **{ID}** gecanceld',
+};
+
+const COLORS = {
+    yellow : '15844367',
+    blue   : '3447003',
+    red    : '15158332',
+    grey   : '0',
 };
 
 const ADD_TEAM_ICONS = true;
@@ -43,13 +41,9 @@ class raidJoinBot {
         this.raidLists = new RaidLists();
         
         if (DEV_MODE) {
-            this.bot = new SittardGoBot.Bot(
-                TEST_TOKEN, TEST_CLIENT_ID, DESCRIPTION, VERSION
-            );
+            this.bot = new SittardGoBot.Bot(require('./config.dev.json'));
         } else {
-            this.bot = new SittardGoBot.Bot(
-                TOKEN, CLIENT_ID, DESCRIPTION, VERSION
-            );
+            this.bot = new SittardGoBot.Bot(require('./config.json'));
         }
             
         this.bot.on('MESSAGE', this.receiveMessage.bind(this));
