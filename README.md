@@ -24,7 +24,7 @@ The bot will look for `config.dev.json` of the `DEV_MODE` is set to true, otherw
 After this you can run the bot:
 
 ```bash
-$ node index.js -g
+$ node index.js
 ```
 
 ## Usage in Discord
