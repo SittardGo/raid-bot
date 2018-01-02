@@ -1,7 +1,7 @@
 /* jshint esversion: 6 */ 
 const fs = require('fs');
 
-const LOG_LOCATION     = './logs/';
+const LOG_LOCATION     = './../logs/';
 
 /* Rich embed format
  {
