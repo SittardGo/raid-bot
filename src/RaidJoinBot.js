@@ -11,6 +11,7 @@ const SittardGoBot = require('sittard-go-bot');
 const MessageTests = require('./MessageTests');
 const RaidLists    = require('./RaidLists');
 const RaidStats    = require('./RaidStats');
+const fs           = require('fs');
 
 const DEV_MODE = true;
 
@@ -38,14 +39,21 @@ const RESET_CHECK_INTERVAL = 60*60*1000;
 class RaidJoinBot {
 
     constructor() {
-        this.raidLists = new RaidLists();
+        if (
+            !fs.existsSync(__dirname+'/../config.dev.json') &&
+            !fs.existsSync(__dirname+'/../config.json')
+        ) {
+            new SittardGoBot.Bot();
+            process.exit(0);
+        }
         
         if (DEV_MODE) {
-            this.bot = new SittardGoBot.Bot(require('./../config.dev.json'));
+            this.bot = new SittardGoBot.Bot(require(__dirname+'/../config.dev.json'));
         } else {
-            this.bot = new SittardGoBot.Bot(require('./../config.json'));
+            this.bot = new SittardGoBot.Bot(require(__dirname+'./../config.json'));
         }
             
+        this.raidLists = new RaidLists();
         this.bot.on('MESSAGE', this.receiveMessage.bind(this));
 
         // Pulse to check for a raid lists reset

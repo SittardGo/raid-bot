@@ -10,20 +10,24 @@
 
 ## Installation
 
-First edit `SittardGoBot.js` to enter your guild specific id's:
-
-  * guild id
-  * admin user id's
-  * channel id's
-
-Then edit `index.js` to include your bot token and client id (both specific for your bot, created at https://appdiscordapp.com/developers/). The test id's are optional, these override the standard id's when de flag `DEV_MODE` is set to `true`.
+First do:
 
 ```bash
 $ npm install
-$ node index.js
+$ node index.js -g
 ```
 
-## Usage
+When running the index with the `-g` flag, you invoke the creation of a configuration file. This file has to be filled in and located in the project root. The values guild-id, bot-token, client-id, version and description are required (and specific for your bot, created at https://appdiscordapp.com/developers/)).
+
+The bot will look for `config.dev.json` of the `DEV_MODE` is set to true, otherwise it will look for `config.json`.
+
+After this you can run the bot:
+
+```bash
+$ node index.js -g
+```
+
+## Usage in Discord
 
   * Create a raid: `++ [raid text]`
   * Join a raid: `+ [raid id]`
