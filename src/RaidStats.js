@@ -1,7 +1,7 @@
 /* jshint esversion: 6 */ 
 const fs = require('fs');
 
-const LOG_LOCATION     = './../logs/';
+const LOG_LOCATION     = __dirname+'/../logs/';
 
 /* Rich embed format
  {
@@ -75,7 +75,7 @@ class RaidStats {
             return bot.getUserById(uId).toString();
         });
 
-        const mostCancled = stats.mostCancled.userIds.map(uId => {
+        const mostCanceled = stats.mostCanceled.userIds.map(uId => {
             return bot.getUserById(uId).toString();
         });
         
@@ -112,8 +112,8 @@ class RaidStats {
             .replace('{MOST_OP}'           , mostOp.join(' & '))
             .replace('{MOST_OP_COUNT}'     , stats.mostOp.count)
             .replace('{CANCELED_COUNT}'    , stats.canceledRaids)
-            .replace('{MOST_IN_CANCELED}'  , mostCancled.join(' & '))
-            .replace('{MOST_CANCEL_COUNT}' , stats.mostCancled.count);
+            .replace('{MOST_IN_CANCELED}'  , mostCanceled.join(' & '))
+            .replace('{MOST_CANCEL_COUNT}' , stats.mostCanceled.count);
 
         console.log(message);
         bot.send(channel, message);
@@ -144,7 +144,7 @@ class RaidStats {
             mostOp: {
                 userIds: [], count: 0
             },
-            mostCancled: {
+            mostCanceled: {
                 userIds: [], count: 0
             },
             teamCounts: {
@@ -195,7 +195,7 @@ class RaidStats {
         
         stats.mostRaids   = this.getHighestCountUser(raiders);
         stats.mostOp      = this.getHighestCountUser(raiderOps);
-        stats.mostCancled = this.getHighestCountUser(canceledRaiders);
+        stats.mostCanceled = this.getHighestCountUser(canceledRaiders);
 
         return stats;
     }

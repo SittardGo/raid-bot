@@ -48,9 +48,13 @@ class RaidJoinBot {
         }
         
         if (DEV_MODE) {
-            this.bot = new SittardGoBot.Bot(require(__dirname+'/../config.dev.json'));
+            this.bot = new SittardGoBot.Bot(
+                require(__dirname+'/../config.dev.json')
+            );
         } else {
-            this.bot = new SittardGoBot.Bot(require(__dirname+'./../config.json'));
+            this.bot = new SittardGoBot.Bot(
+                require(__dirname+'./../config.json')
+            );
         }
             
         this.raidLists = new RaidLists();
