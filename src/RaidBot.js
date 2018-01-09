@@ -13,7 +13,7 @@ const RaidLists    = require('./RaidLists');
 const RaidStats    = require('./RaidStats');
 const fs           = require('fs');
 
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 const MESSAGES = {
     missing_raid_id       : 'Raid nummer missend',
