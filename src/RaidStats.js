@@ -3,69 +3,44 @@ const fs = require('fs');
 
 const LOG_LOCATION     = __dirname+'/../logs/';
 
-/* Rich embed format
- {
-  "content": "**Dagelijks Raid overzicht**",
-  "embed": {
-    "title": "Raider(s) van de dag",
-    "description": "@Rivo | dartfreak170 | lvl 37 & @Jasper (QforDyslexia|36) & @Davidtjuh • lvl 40 & @Kevin (kmeijers lvl 39) met 2 raids!",
+const DAILY_MESSAGE =  {
+    "description": "**Dagelijks Raid overzicht**",
     "color": 0,
     "thumbnail": {
-      "url": "https://sittardgo.nl/images/instinct_color.svg"
+      "url": "https://sittardgo.nl/images/{TEAM}_color.png"
     },
     "fields": [
       {
+        "name": "Raider(s) van de dag",
+        "value": "{MOST_RAIDED} met {RAID_COUNT} raid(s)!",
+      },
+      {
         "name": "Team met meeste raiders",
-        "value": ":valor: Valor met 15 raiders | instinct: 6 | mystic: 10  |"
+        "value": "{ICON} {TEAM_CAP} met {RAID_COUNT} raider(s) {OTHER_TEAMS} |"
       },
       {
         "name": "Populairste raid",
-        "value": "Ho-Oh, Borstbeeld, 15:15 met 7 deelnemers"
+        "value": "{BUSY_RAID_OP} met {BUSY_RAID_COUNT} deelnemers"
       },
       {
         "name": "Meeste raids gestart",
-        "value": "@Davidtjuh • lvl 40 met 2 raids"
+        "value": "{MOST_OP} met {MOST_OP_COUNT} raid(s)"
       },
       {
         "name": "Raids gecanceld",
-        "value": "5 raids zijn er gecanceld"
+        "value": "{CANCELED_COUNT} raid(s) zijn er gecanceld"
       },
       {
         "name": "Pechvogel(s) van de dag",
-        "value": "@Rivo | dartfreak170 | lvl 37 was opgegeven voor 4 gecancelde raids"
+        "value": "{MOST_IN_CANCELED} was opgegeven voor {MOST_CANCEL_COUNT} gecancelde raid(s)"
       }
     ]
-  }
-}
-*/
-
-const DAILY_MESSAGE = 
-`** Dagelijks Raid overzicht **
-\`-------------------------------\`
-\`- Raider van de dag - \`
-**{MOST_RAIDED}** met **{RAID_COUNT}** raids!
-
-\`- Team met meeste raiders - \`
-{ICON} **{TEAM}** met **{RAID_TEAM_COUNT}** raiders {OTHER_TEAMS} |
-\`-------------------------------\`
-\`- Populairste raid - \`
-{BUSY_RAID_OP} met {BUSY_RAID_COUNT} deelnemers.
-
-\`- Meeste raids gestart - \`
-**{MOST_OP}** met {MOST_OP_COUNT} raids.
-
-\`- Raids gecanceld - \`
-{CANCELED_COUNT} raids zijn er gecanceld.
-
-\`- Pechvogel van de dag - \`
-**{MOST_IN_CANCELED}** heeft zich opgegeven voor {MOST_CANCEL_COUNT} gecancelde raids
-`;
+};
 
 class RaidStats {
 
-    static emitDailyStats(bot, channel) {
-        const stats = this.getDailyStats();
-        console.log(stats);
+    static emitDailyStats(bot, channel, opIgnorePattern = false) {
+        const stats = this.getDailyStats(Date.now(), opIgnorePattern);
 
         const mostRaids = stats.mostRaids.userIds.map(uId => {
             return bot.getUserById(uId).toString();
@@ -89,34 +64,48 @@ class RaidStats {
             return best;
         }, 0);
 
-        let icon = '', team = '', tcount = 0, otherTeams = '';
+        let icon       = '',
+            team       = '',
+            teamCap    = '',
+            tcount     = 0,
+            otherTeams = '';
+        
         for (let ct in stats.teamCounts) {
             if (ct === bestTeam) {
-                icon = bot.getTeamIcon(ct);
-                team = ct.charAt(0).toUpperCase() + ct.slice(1);
-                tcount = stats.teamCounts[ct];
+                icon    = bot.getTeamIcon(ct);
+                team    = ct;
+                teamCap = ct.charAt(0).toUpperCase() + ct.slice(1);
+                tcount  = stats.teamCounts[ct];
                 continue;
             }
+
             otherTeams += `| ${ct}: ${stats.teamCounts[ct]} `;
         }
 
-        let message = DAILY_MESSAGE
-            .replace('{MOST_RAIDED}'       , mostRaids.join(' & '))
-            .replace('{RAID_COUNT}'        , stats.mostRaids.count)
-            .replace('{ICON}'              , icon)
-            .replace('{TEAM}'              , team)
-            .replace('{RAID_TEAM_COUNT}'   , tcount)
-            .replace('{OTHER_TEAMS}'       , otherTeams)
-            .replace('{BUSY_RAID_OP}'      , stats.busiestRaid.op)
-            .replace('{BUSY_RAID_COUNT}'   , stats.busiestRaid.count)
-            .replace('{MOST_OP}'           , mostOp.join(' & '))
-            .replace('{MOST_OP_COUNT}'     , stats.mostOp.count)
-            .replace('{CANCELED_COUNT}'    , stats.canceledRaids)
-            .replace('{MOST_IN_CANCELED}'  , mostCanceled.join(' & '))
-            .replace('{MOST_CANCEL_COUNT}' , stats.mostCanceled.count);
+        const message = Object.assign({}, DAILY_MESSAGE);
 
-        console.log(message);
-        bot.send(channel, message);
+        message.thumbnail.url = message.thumbnail.url.replace('{TEAM}', team);
+
+        message.fields = message.fields.map(f => {
+            f.value = f.value
+                .replace('{MOST_RAIDED}'       , mostRaids.join(' & '))
+                .replace('{RAID_COUNT}'        , stats.mostRaids.count)
+                .replace('{ICON}'              , icon)
+                .replace('{TEAM}'              , team)
+                .replace('{TEAM_CAP}'          , teamCap)
+                .replace('{RAID_TEAM_COUNT}'   , tcount)
+                .replace('{OTHER_TEAMS}'       , otherTeams)
+                .replace('{BUSY_RAID_OP}'      , stats.busiestRaid.op)
+                .replace('{BUSY_RAID_COUNT}'   , stats.busiestRaid.count)
+                .replace('{MOST_OP}'           , mostOp.join(' & '))
+                .replace('{MOST_OP_COUNT}'     , stats.mostOp.count)
+                .replace('{CANCELED_COUNT}'    , stats.canceledRaids)
+                .replace('{MOST_IN_CANCELED}'  , mostCanceled.join(' & '))
+                .replace('{MOST_CANCEL_COUNT}' , stats.mostCanceled.count);
+            return f;
+        });
+
+        bot.send(channel, bot.createEmbed(message));
         return;
     }
 
@@ -124,7 +113,7 @@ class RaidStats {
         //
     }
 
-    static getDailyStats(timestamp = Date.now()) {
+    static getDailyStats(timestamp = Date.now(), opIgnorePattern = false) {
         const log = this.getLog(timestamp);
 
         if (log === false) {
@@ -156,6 +145,12 @@ class RaidStats {
         };
 
         log.map(raid => {
+            if (opIgnorePattern instanceof RegExp) {
+                if (opIgnorePattern.test(raid.op)) {
+                    return;
+                }
+            }
+
             if (raid.canceled) {
                 stats.canceledRaids++;
                 
@@ -229,7 +224,7 @@ class RaidStats {
     static writeLog(lists) {
         const d = new Date();
         const filename =
-            `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}.json`;
+            `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}.json`;
 
         fs.writeFileSync(
             LOG_LOCATION+filename,
@@ -240,7 +235,7 @@ class RaidStats {
     static getLog(day) {
         if (typeof day === 'number') {
             day = new Date(day);
-            day = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+            day = `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`;
         }
 
         const file = LOG_LOCATION+day+'.json';

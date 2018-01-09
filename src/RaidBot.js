@@ -35,8 +35,9 @@ const COLORS = {
 const ADD_TEAM_ICONS = true;
 const REMOVE_COMMAND = false;
 const RESET_CHECK_INTERVAL = 60*60*1000;
+const RAID_EVENT_PREFIX = '`EX-Test |`';
 
-class RaidJoinBot {
+class RaidBot {
 
     constructor() {
         if (
@@ -51,6 +52,11 @@ class RaidJoinBot {
             this.bot = new SittardGoBot.Bot(
                 require(__dirname+'/../config.dev.json')
             );
+
+            this.bot.on('ERROR', function() {
+                process.exit(0);
+            });
+
         } else {
             this.bot = new SittardGoBot.Bot(
                 require(__dirname+'./../config.json')
@@ -69,10 +75,10 @@ class RaidJoinBot {
             }
             
             RaidStats.writeLog(this.raidLists.prevLists);
-            RaidStats.emitDailyStats(this.bot, 'raid');
+            RaidStats.emitDailyStats(this.bot, 'raid', '^'+RAID_EVENT_PREFIX);
 
             if (RaidStats.isLastDayOfMonth()) {
-                RaidStats.emitMonthlyStats(this.bot, 'raid');
+                // RaidStats.emitMonthlyStats(this.bot, 'raid');
             }
 
         }, RESET_CHECK_INTERVAL);
@@ -143,18 +149,33 @@ class RaidJoinBot {
     }
 
     createRaid(msgObj, msgTxt) {
-        const raidOP = MessageTests.stripCommand('startraid', msgTxt);
+        let raidOP = MessageTests.stripCommand('startraid', msgTxt).trim();
         let raidOG = this.bot.getMessageUsername(msgObj);
         
-        const newId = this.raidLists.create(raidOP.trim(), msgObj.author.id);
+        raidOP = this.opModifier(raidOP, msgObj);
 
-        if (newId > 2 && DEV_MODE) {
-            this.raidLists.writeDailyLog();
+        const newId = this.raidLists.create(raidOP, msgObj.author.id);
+
+        // Testing raid stats
+        if (newId > 4 && DEV_MODE) {
+            this.raidLists.reset(true);
+            RaidStats.writeLog(this.raidLists.prevLists);
+            RaidStats.emitDailyStats(this.bot, 'raid', new RegExp('^'+RAID_EVENT_PREFIX));
+            return;
         }
 
         console.log(`raid started by ${raidOG}: ${raidOP} (id: ${newId})`);
 
         this.joinRaid(msgObj, newId, msgObj.author.id);
+    }
+
+
+    opModifier(raidOP, msgObj) {
+        if (this.bot.getMsgChannelId(msgObj) === this.bot.getChannelId('raidevent')) {
+            return RAID_EVENT_PREFIX + raidOP;
+        }
+
+        return raidOP;
     }
 
     cancelRaid(msgObj, raidId) {
@@ -170,14 +191,9 @@ class RaidJoinBot {
 
         const raid = this.raidLists.get(raidId);
 
-        const op = this.raidLists
-            .getOP(raidId)
-            .replace(/\`\(auto.+\)\`\s*/, '')
-            .trim();
-
         let reply = MESSAGES.raid_cancelled
             .replace('{ID}', raidId) +
-            ` (${op})\n`;
+            ` (${this.raidLists.getOP(raidId)})\n`;
         
         const notified = [];
         
@@ -214,10 +230,11 @@ class RaidJoinBot {
     }
 
     doModBreak(msgObj, raidId, msgTxt) {
-        const modTxt = MessageTests
+        let modTxt = MessageTests
             .stripCommand('modbreak', msgTxt)
-            .replace(/(\(auto.+\))/g, '')
             .trim();
+
+        modTxt = this.opModifier(modTxt, msgObj);
 
         this.raidLists.override(raidId, modTxt);
 
@@ -232,95 +249,70 @@ class RaidJoinBot {
             return;
         }
 
-        const op = `**${raid.op}**\n`+
-            MESSAGES.count_users.replace('{COUNT}', raid.users.length)+
-            ' '+MESSAGES.auto_join_msg.replace('{ID}', raidId);
-
-        const teams = this.getTeamLists(raid.users);
-        const fields = [];
-
-        let missingTeams = ['valor', 'instinct', 'mystic'];
+        const counts = { valor: 0, mystic: 0, instinct: 0 };
         
-        teams.map(t => {
-            if (t.length < 1) {
+        let op = `**${raid.op}**\n`+
+            MESSAGES.auto_join_msg.replace('{ID}', raidId);
+
+        raid.users.map(u => {
+            if (!counts.hasOwnProperty(u.team)) {
                 return;
             }
 
-            missingTeams = missingTeams.filter(mt => t[0].team !== mt);
-                        
-            fields.push({
-                name: this.getTeamHeader(t[0].team),
-                value: this.getTeamRows(t),
-                inline: true
-            });
+            counts[u.team]++;
         });
 
-        missingTeams.map(t => {
-            fields.push({
-                name: this.getTeamHeader(t),
-                value: ' - ',
-                inline: true
-            });
-        });
 
-        let color = COLORS.grey;
+        // User list
+        let c = 0;
+        op += raid.users.reduce((txt, u) => {
+            c++;
+            txt += '\n';
 
-        if (teams[0][0]) {
-            switch(teams[0][0].team) {
-                case 'valor'    : color = COLORS.red; break;
-                case 'instinct' : color = COLORS.yellow; break;
-                case 'mystic'   : color = COLORS.blue; break;
+            let txtC = (String(c).length < 2)? c+' ' : c;
+            
+            return txt+`\`${txtC}|\` ${u.username}`;
+        }, '');
+
+        // footer
+        let leadingTeam = false, leadingCount = 0, hTxt = '';
+        for (let c in counts) {
+            if (counts[c] > leadingCount) {
+                leadingCount = counts[c];
+                leadingTeam = c;
             }
+            hTxt += ` ${this.getTeamFooter(c)} ${counts[c]}`;
+        }
+        
+        op += `\n\u200B\n*${hTxt.trim()}*`;
+        
+        let color = COLORS.grey;
+        switch(leadingTeam) {
+            case 'valor'    : color = COLORS.red; break;
+            case 'instinct' : color = COLORS.yellow; break;
+            case 'mystic'   : color = COLORS.blue; break;
         }
 
         const card = this.bot.createEmbed({
             description: op,
-            fields: fields,
-            color: color
+            color: color,
         });
 
         this.bot.reply(msgObj, card)
             .catch(_ => console.log('error', _));
     }
 
-    getTeamLists(raidUsers) {
-        const teamIndex = { valor: 0, instinct: 1, mystic: 2 };
-        const teams = [[], [],[]];
-        
-        raidUsers.map(u => {
-            teams[teamIndex[u.team]].push(u);
-        });
-
-        teams.sort((a, b) => a.length - b.length);
-
-        return teams.reverse();
-    }
-
-    getTeamRows(users) {
-        let res = '', i = 0;
-
-        users.map(u => {
-            i++;
-            const txtIndex = (String(i).length < 2)? i+' ' : i;
-            
-            if (i !== 1) { 
-                res += '\n';
-            }
-            
-            res += `\`${txtIndex}|\` ${u.username}`;
-        });
-
-        return res;
-    }
-
-    getTeamHeader(name) {
+    getTeamFooter(name) {
         const icon = (ADD_TEAM_ICONS)?
             this.bot.getTeamIcon(name) : ' ';
 
         name = icon + ' ' +
             name.charAt(0).toUpperCase() +
             name.slice(1);
-        return name;
+
+        // name var includes team name..
+        // Now only returning the icon
+        return icon;
     }
 
     emitInvalid(searchRes, msgObj, raidId) {
@@ -332,4 +324,4 @@ class RaidJoinBot {
     }
 }
 
-module.exports = RaidJoinBot;
+module.exports = RaidBot;

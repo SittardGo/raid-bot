@@ -1,17 +1,26 @@
 {
-  "name": "raid-rewrite",
+  "name": "raid-bot",
   "version": "1.0.0",
   "main": "index.js",
+  "homepage": "https://github.com/SittardGo/raid-bot",
+  "bugs": {
+    "url": "https://github.com/SittardGo/raid-bot/issues",
+    "email": "info@sittardgo.nl"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SittardGo/raid-bot.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Sittard Go",
   "license": "ISC",
   "dependencies": {
     "argparse": "^1.0.9",
     "discord.js": "^11.2.1",
     "eventbusjs": "^0.2.0",
-    "sittard-go-bot": "^1.0.0",
+    "sittard-go-bot": "^1.0.4",
     "uws": "^9.14.0"
   },
   "description": ""

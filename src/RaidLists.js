@@ -111,11 +111,15 @@ class RaidLists {
         return list.op;
     }
 
-    reset() {
+    reset(force = false) {
         const currH = new Date().getHours();
         const state = this.hasReset;
         
-        if (currH > RESET_END_TIME && currH < RESET_START_TIME) {
+        if (
+            currH > RESET_END_TIME &&
+            currH < RESET_START_TIME &&
+            force === false
+        ) {
             return false;
         }
 
