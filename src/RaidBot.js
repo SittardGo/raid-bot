@@ -75,7 +75,11 @@ class RaidBot {
             }
             
             RaidStats.writeLog(this.raidLists.prevLists);
-            RaidStats.emitDailyStats(this.bot, 'raid', '^'+RAID_EVENT_PREFIX);
+            RaidStats.emitDailyStats(
+                this.bot,
+                'raid',
+                new RegExp('^'+RAID_EVENT_PREFIX)
+            );
 
             if (RaidStats.isLastDayOfMonth()) {
                 // RaidStats.emitMonthlyStats(this.bot, 'raid');
