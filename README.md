@@ -17,7 +17,7 @@ $ npm install
 $ node index.js -g
 ```
 
-When running the index with the `-g` flag, you invoke the creation of a configuration file. This file has to be filled in and located in the project root. The values guild-id, bot-token, client-id, version and description are required (and specific for your bot, created at https://appdiscordapp.com/developers/)).
+When running the index with the `-g` flag, you invoke the generation of a configuration file. This file has to be filled in and located in the project root. The values guild-id, bot-token, client-id, version and description are required (and specific for your bot, created at https://appdiscordapp.com/developers/)).
 
 The bot will look for `config.dev.json` of the `DEV_MODE` is set to true, otherwise it will look for `config.json`.
 
@@ -34,4 +34,5 @@ $ node index.js
   * Join a raid on team Instinct: `+ [raid id] i`
   * Leave a raid: `- [raid id]`
   * Cancel a raid: `- cancel [raid id]`
+  * Uncancel a raid: `+ uncancel [raid id]`
   * Edit raid text: `+ mod [raid text]`

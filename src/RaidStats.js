@@ -16,7 +16,7 @@ const DAILY_MESSAGE =  {
       },
       {
         "name": "Team met meeste raiders",
-        "value": "{ICON} {TEAM_CAP} met {RAID_COUNT} raider(s) {OTHER_TEAMS} |"
+        "value": "{ICON} {TEAM_CAP} met {RAID_TEAM_COUNT} raider(s) {OTHER_TEAMS} |"
       },
       {
         "name": "Populairste raid",
@@ -42,16 +42,25 @@ class RaidStats {
     static emitDailyStats(bot, channel, opIgnorePattern = false) {
         const stats = this.getDailyStats(Date.now(), opIgnorePattern);
 
+        /**
+         * There is an android bug which will not
+         * resolve @-mentions in a  rich embed.
+         * For now just use the usernames and the
+         * mention resolvement is commented out.
+         */
         const mostRaids = stats.mostRaids.userIds.map(uId => {
-            return bot.getUserById(uId).toString();
+            return bot.getUsernameOfUserId(uId);
+            // return bot.getUserById(uId).toString();
         });
 
         const mostOp = stats.mostOp.userIds.map(uId => {
-            return bot.getUserById(uId).toString();
+            return bot.getUsernameOfUserId(uId);
+            // return bot.getUserById(uId).toString();
         });
 
         const mostCanceled = stats.mostCanceled.userIds.map(uId => {
-            return bot.getUserById(uId).toString();
+            return bot.getUsernameOfUserId(uId);
+            // return bot.getUserById(uId).toString();
         });
         
         let bestTeam = '';

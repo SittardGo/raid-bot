@@ -1,6 +1,9 @@
 /* jshint esversion: 6 */ 
+const fs = require('fs');
+
 const RESET_START_TIME = 20;
 const RESET_END_TIME   = 4;
+const RECOVER_FILE     = __dirname+'/../logs/recover.json';
 
 class RaidLists {
 
@@ -9,6 +12,14 @@ class RaidLists {
         this.lists = [];
         this.prevLists = [];
         this.hasReset = true;
+
+        if (fs.existsSync(RECOVER_FILE)) {
+            this.lists = require(RECOVER_FILE);
+            this.hasReset = false;
+            this.index = this.lists.length;
+            
+            fs.unlinkSync(RECOVER_FILE);
+        }
     }
 
     get(id) {       
@@ -84,6 +95,18 @@ class RaidLists {
         return true;
     }
 
+    unCancel(id) {
+        const raid = this.get(id);
+        if (!raid) {
+            return false;
+        }
+
+        raid.canceled = false;
+        raid.canceledBy = false;
+
+        return true;
+    }
+
     override(id, op) {
         this.get(id).op = op;
     }
@@ -111,6 +134,13 @@ class RaidLists {
         return list.op;
     }
 
+    createRecoverFile() {
+        fs.writeFileSync(
+            RECOVER_FILE,
+            JSON.stringify(this.lists, null, 2)
+        );
+    }
+
     reset(force = false) {
         const currH = new Date().getHours();
         const state = this.hasReset;
@@ -128,6 +158,10 @@ class RaidLists {
         this.index = 0;
         this.lists = [];
         this.hasReset = true;
+
+        if (fs.existsSync(RECOVER_FILE)) {
+            fs.unlinkSync(RECOVER_FILE);
+        }
 
         return !state;
     }

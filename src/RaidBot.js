@@ -1,17 +1,9 @@
 /* jshint esversion: 6 */ 
-
-/**
- * TODO:
- * - Mention everyone in list when modbreak is performed
- * - Uncancel a raid
- * - Store raidlists intermediate for recovery
- **/
-
+const fs           = require('fs');
 const SittardGoBot = require('sittard-go-bot');
 const MessageTests = require('./MessageTests');
 const RaidLists    = require('./RaidLists');
 const RaidStats    = require('./RaidStats');
-const fs           = require('fs');
 
 const DEV_MODE = false;
 
@@ -23,6 +15,9 @@ const MESSAGES = {
     count_users           : 'Deelnemers: **{COUNT}**',
     auto_join_msg         : '`(auto-join met +{ID})`',
     raid_cancelled        : 'Raid nr. **{ID}** gecanceld',
+    raid_uncancelled      : 'Raid nr. **{ID}** is weer actief!',
+    raid_err_uncancelled  : 'Vraag een mod om een gecancelde raid te hervatten',
+    raid_changed          : 'Raid nr {ID} is aangepast: `{OP}`\n',
 };
 
 const COLORS = {
@@ -104,12 +99,19 @@ class RaidBot {
         // New List
         if (MessageTests.is('startraid', msgTxt)) {
             this.createRaid(msgObj, msgTxt);
+            this.raidLists.createRecoverFile();
             return;
         }
 
         const raidId = MessageTests.extractId(msgTxt);
+        
+        // Uncancel raid
+        if (MessageTests.is('uncancel', msgTxt) && raidId) {
+            this.unCancelRaid(msgObj, raidId);
+            this.raidLists.createRecoverFile();
+            return;
+        }
 
-        // This should never happen (regex checks for numbers)
         if (!raidId) {
             this.bot.reply(msgObj, MESSAGES.missing_raid_id);
             return;
@@ -124,23 +126,17 @@ class RaidBot {
         // Modbreak
         if (MessageTests.is('modbreak', msgTxt)) {
             this.doModBreak(msgObj, raidId, msgTxt);
-            return;
-        }
 
         // Cancel raid
-        if (MessageTests.is('cancelraid', msgTxt)) {
+        } else if (MessageTests.is('cancelraid', msgTxt)) {
             this.cancelRaid(msgObj, raidId);
-            return;
-        }
 
         // Join raid
-        if (MessageTests.is('joinraid', msgTxt)) {
+        } else if (MessageTests.is('joinraid', msgTxt)) {
             this.joinRaid(msgObj, raidId);
-            return;
-        }
 
         // Leave raid
-        if (MessageTests.is('leaveraid', msgTxt)) {
+        } else if (MessageTests.is('leaveraid', msgTxt)) {
             const resLeave = this.raidLists.leave(
                 raidId, msgObj.author.id
             );
@@ -148,8 +144,9 @@ class RaidBot {
             if (resLeave) {
                 this.emitRaid(msgObj, raidId);
             }
-            return;
         }
+
+        this.raidLists.createRecoverFile();
     }
 
     createRaid(msgObj, msgTxt) {
@@ -161,10 +158,16 @@ class RaidBot {
         const newId = this.raidLists.create(raidOP, msgObj.author.id);
 
         // Testing raid stats
-        if (newId > 4 && DEV_MODE) {
+        if (newId > 2 && DEV_MODE) {
             this.raidLists.reset(true);
+            
             RaidStats.writeLog(this.raidLists.prevLists);
-            RaidStats.emitDailyStats(this.bot, 'raid', new RegExp('^'+RAID_EVENT_PREFIX));
+            RaidStats.emitDailyStats(
+                this.bot,
+                'raid',
+                new RegExp('^'+RAID_EVENT_PREFIX)
+            );
+
             return;
         }
 
@@ -175,7 +178,10 @@ class RaidBot {
 
 
     opModifier(raidOP, msgObj) {
-        if (this.bot.getMsgChannelId(msgObj) === this.bot.getChannelId('raidevent')) {
+        if (
+            this.bot.getMsgChannelId(msgObj) ===
+            this.bot.getChannelId('raidevent')
+        ) {
             return RAID_EVENT_PREFIX + raidOP;
         }
 
@@ -193,14 +199,46 @@ class RaidBot {
             this.bot.getMessageUsername(msgObj)
         );
 
-        const raid = this.raidLists.get(raidId);
-
         let reply = MESSAGES.raid_cancelled
             .replace('{ID}', raidId) +
             ` (${this.raidLists.getOP(raidId)})\n`;
         
-        const notified = [];
+        this.notifyRaiders(raidId, msgObj, reply);
+    }
+
+    unCancelRaid(msgObj, raidId) {
+        // test for mod
+        if (!this.bot.userIsMod(msgObj.member)) {
+            this.bot.reply(msgObj, MESSAGES.raid_err_uncancelled);
+            return;
+        }
+
+        const res = this.raidLists.unCancel(raidId);
+        if (!res) {
+            return;
+        }
+
+        console.log(
+            `Raid ${raidId} un-canceled by: `+
+            this.bot.getMessageUsername(msgObj)
+        );
+
+        let reply = MESSAGES.raid_uncancelled
+            .replace('{ID}', raidId) +
+            ` (${this.raidLists.getOP(raidId)})\n`;
         
+        this.notifyRaiders(raidId, msgObj, reply);
+    }
+
+    notifyRaiders(raidId, msgObj, prefix = '') {
+        const raid     = this.raidLists.get(raidId);
+        const notified = [];
+        let reply      = prefix;
+
+        if (!raid) {
+            return;
+        }
+
         raid.users.map(u => {
             if (notified.indexOf(u.userId) > -1) {
                 return;
@@ -241,8 +279,13 @@ class RaidBot {
         modTxt = this.opModifier(modTxt, msgObj);
 
         this.raidLists.override(raidId, modTxt);
-
         this.emitRaid(msgObj, raidId);
+
+        const reply = MESSAGES.raid_changed
+            .replace('{ID}', raidId)
+            .replace('{OP}', modTxt);
+
+        this.notifyRaiders(raidId, msgObj, reply);
     }
 
     emitRaid(msgObj, raidId) {
@@ -253,7 +296,7 @@ class RaidBot {
             return;
         }
 
-        const counts = { valor: 0, mystic: 0, instinct: 0 };
+        const counts = { valor: 0, instinct: 0, mystic: 0 };
         
         let op = `**${raid.op}**\n`+
             MESSAGES.auto_join_msg.replace('{ID}', raidId);
@@ -279,16 +322,16 @@ class RaidBot {
         }, '');
 
         // footer
-        let leadingTeam = false, leadingCount = 0, hTxt = '';
+        let leadingTeam = false, leadingCount = 0, fTxt = '';
         for (let c in counts) {
             if (counts[c] > leadingCount) {
                 leadingCount = counts[c];
                 leadingTeam = c;
             }
-            hTxt += ` ${this.getTeamFooter(c)} ${counts[c]}`;
+            fTxt += ` ${this.getTeamFooter(c)} ${counts[c]}`;
         }
         
-        op += `\n\u200B\n*${hTxt.trim()}*`;
+        op += `\n\u200B\n*${fTxt.trim()}*`;
         
         let color = COLORS.grey;
         switch(leadingTeam) {
