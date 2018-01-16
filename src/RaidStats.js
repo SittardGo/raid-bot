@@ -253,7 +253,12 @@ class RaidStats {
             return false;
         }
 
-        return require(file);
+        try {
+            return JSON.parse(fs.readFileSync(file, 'utf8'));
+        } catch(e) {
+            console.log(e);
+            return [];
+        }
     }
 
     static addOrIncrement(statsObj, id) {

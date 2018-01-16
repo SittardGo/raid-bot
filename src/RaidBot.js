@@ -17,7 +17,7 @@ const MESSAGES = {
     raid_cancelled        : 'Raid nr. **{ID}** gecanceld',
     raid_uncancelled      : 'Raid nr. **{ID}** is weer actief!',
     raid_err_uncancelled  : 'Vraag een mod om een gecancelde raid te hervatten',
-    raid_changed          : 'Raid nr {ID} is aangepast: `{OP}`\n',
+    raid_changed          : 'Raid nr {ID} is aangepast: {OP}\n',
 };
 
 const COLORS = {
@@ -70,11 +70,15 @@ class RaidBot {
             }
             
             RaidStats.writeLog(this.raidLists.prevLists);
-            RaidStats.emitDailyStats(
-                this.bot,
-                'raid',
-                new RegExp('^'+RAID_EVENT_PREFIX)
-            );
+            
+            // Stats without event raids:
+            // RaidStats.emitDailyStats(
+            //     this.bot,
+            //     'raid',
+            //     new RegExp('^'+RAID_EVENT_PREFIX)
+            // );
+            
+            RaidStats.emitDailyStats(this.bot, 'raid');
 
             if (RaidStats.isLastDayOfMonth()) {
                 // RaidStats.emitMonthlyStats(this.bot, 'raid');
