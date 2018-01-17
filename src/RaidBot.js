@@ -5,7 +5,7 @@ const MessageTests = require('./MessageTests');
 const RaidLists    = require('./RaidLists');
 const RaidStats    = require('./RaidStats');
 
-const DEV_MODE = false;
+const DEV_MODE = true;
 
 const MESSAGES = {
     missing_raid_id       : 'Raid nummer missend',
@@ -70,16 +70,8 @@ class RaidBot {
             }
             
             RaidStats.writeLog(this.raidLists.prevLists);
+            RaidStats.emitStats(this.bot, 'raid');
             
-            // Stats without event raids:
-            // RaidStats.emitDailyStats(
-            //     this.bot,
-            //     'raid',
-            //     new RegExp('^'+RAID_EVENT_PREFIX)
-            // );
-            
-            RaidStats.emitDailyStats(this.bot, 'raid');
-
             if (RaidStats.isLastDayOfMonth()) {
                 // RaidStats.emitMonthlyStats(this.bot, 'raid');
             }
@@ -97,6 +89,26 @@ class RaidBot {
         const msgTxt = msgObj.content.trim();
 
         if (!MessageTests.is('command', msgTxt)) {
+            return;
+        }
+
+        // Emit stats of specific date
+        if (MessageTests.is('emitStats', msgTxt)) {
+            const authId = this.bot.getMsgAuthorId(msgObj);
+            
+            if (authId !== this.bot.getAdminId('renzo')) {
+                return;
+            }
+
+            const dateTxt = msgTxt.replace(/\+\s*emit\s*/i, '').trim();
+            const date = new Date(dateTxt);
+
+            RaidStats.emitStats(
+                this.bot,
+                this.bot.getMsgChannelId(msgObj),
+                RaidStats.getDailyStats(date.getTime())
+            );
+
             return;
         }
 

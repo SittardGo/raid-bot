@@ -15,6 +15,8 @@ const regex = {
     leaveraid: /^\-{1}\s*\d+/,
     // Moderator input is plus sign a number and the word mod
     modbreak: /^\+{1}\s*\d+\s*mod/i,
+    // Emit a raid stats for a specific date
+    emitstats: /^\+{1}\s*emit\s*\d{4}\-\d{1,2}\-\d{1,2}/i,
     // Uncancel a raid is plus sign, a number and the word uncancel
     uncancel: /^\+{1}\s*\d+\s*uncancel/i,
     // Match username in list

@@ -39,8 +39,10 @@ const DAILY_MESSAGE =  {
 
 class RaidStats {
 
-    static emitDailyStats(bot, channel, opIgnorePattern = false) {
-        const stats = this.getDailyStats(Date.now(), opIgnorePattern);
+    static emitStats(bot, channel, stats = false, opIgnorePattern = false) {
+        if (!stats) {
+            stats = this.getDailyStats(Date.now(), opIgnorePattern);
+        }
 
         /**
          * There is an android bug which will not
@@ -91,7 +93,8 @@ class RaidStats {
             otherTeams += `| ${ct}: ${stats.teamCounts[ct]} `;
         }
 
-        const message = Object.assign({}, DAILY_MESSAGE);
+        // Deep clone the message
+        const message = JSON.parse(JSON.stringify(DAILY_MESSAGE));
 
         message.thumbnail.url = message.thumbnail.url.replace('{TEAM}', team);
 
@@ -248,8 +251,10 @@ class RaidStats {
         }
 
         const file = LOG_LOCATION+day+'.json';
+        console.log('fetching log', file);
 
         if (!fs.existsSync(file)) {
+            console.log('log doesn\'t exists');
             return false;
         }
 
