@@ -30,7 +30,7 @@ const COLORS = {
 const ADD_TEAM_ICONS = true;
 const REMOVE_COMMAND = false;
 const RESET_CHECK_INTERVAL = 60*60*1000;
-const RAID_EVENT_PREFIX = '`EX-Test |`';
+const RAID_EVENT_PREFIX = '`EX-Trigger |`';
 
 class RaidBot {
 
@@ -178,11 +178,7 @@ class RaidBot {
             this.raidLists.reset(true);
             
             RaidStats.writeLog(this.raidLists.prevLists);
-            RaidStats.emitDailyStats(
-                this.bot,
-                'raid',
-                new RegExp('^'+RAID_EVENT_PREFIX)
-            );
+            RaidStats.emitStats(this.bot, 'raid');
 
             return;
         }
@@ -195,8 +191,8 @@ class RaidBot {
 
     opModifier(raidOP, msgObj) {
         if (
-            this.bot.getMsgChannelId(msgObj) ===
-            this.bot.getChannelId('raidevent')
+            raidOP.toLowerCase().indexOf('vissers') !== -1 ||
+            raidOP.toLowerCase().indexOf('voetval') !== -1
         ) {
             return RAID_EVENT_PREFIX + raidOP;
         }
