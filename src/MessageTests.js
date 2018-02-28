@@ -22,7 +22,9 @@ const regex = {
     // Match username in list
     withusername: '^\\d+.\\s[VAR]$',
     // Capture id from command
-    getId: /^\-{1}\s*(\d+)|^\+{1}\s*(\d+)/,
+    getid: /^\-{1}\s*(\d+)|^\+{1}\s*(\d+)/,
+    // Ends with the ex tag !EX
+    withextag: /!ex$/i,
     escape: /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g,
 };
 
@@ -54,7 +56,7 @@ class MessageTests {
     }
 
     static extractId(msg) {
-        const matches = msg.match(regex.getId);
+        const matches = msg.match(regex.getid);
 
         if (!matches) {
             return false;

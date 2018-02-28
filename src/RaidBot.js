@@ -27,10 +27,11 @@ const COLORS = {
     grey   : '0',
 };
 
-const ADD_TEAM_ICONS = true;
-const REMOVE_COMMAND = false;
+const ADD_TEAM_ICONS       = true;
+const REMOVE_COMMAND       = false;
 const RESET_CHECK_INTERVAL = 60*60*1000;
-const RAID_EVENT_PREFIX = '`EX-Trigger |`';
+const EX_TRIGGER_PREFIX    = '`EX-Trigger` ';
+const EX_COORD_ROLE        = 'ex-coordinators';
 
 class RaidBot {
 
@@ -169,9 +170,11 @@ class RaidBot {
         let raidOP = MessageTests.stripCommand('startraid', msgTxt).trim();
         let raidOG = this.bot.getMessageUsername(msgObj);
         
-        raidOP = this.opModifier(raidOP, msgObj);
-
-        const newId = this.raidLists.create(raidOP, msgObj.author.id);
+        const newId = this.raidLists.create(
+            raidOP,
+            msgObj.author.id,
+            this.isTrigger(raidOP, msgObj)
+        );
 
         // Testing raid stats
         if (newId > 2 && DEV_MODE) {
@@ -189,15 +192,16 @@ class RaidBot {
     }
 
 
-    opModifier(raidOP, msgObj) {
-        if (
-            raidOP.toLowerCase().indexOf('vissers') !== -1 ||
-            raidOP.toLowerCase().indexOf('voetval') !== -1
-        ) {
-            return RAID_EVENT_PREFIX + raidOP;
+    isTrigger(raidOP, msgObj) {
+        if (!MessageTests.is('withExTag', raidOP)) {
+            return false;
         }
 
-        return raidOP;
+        if (!this.bot.userHasRole(msgObj.member, EX_COORD_ROLE)) {
+            return false;
+        }
+
+        return true;
     }
 
     cancelRaid(msgObj, raidId) {
@@ -284,13 +288,21 @@ class RaidBot {
     }
 
     doModBreak(msgObj, raidId, msgTxt) {
-        let modTxt = MessageTests
+        const raid = this.raidLists.get(raidId);
+        
+        if (!raid) {
+            return;
+        }
+
+
+        const modTxt = MessageTests
             .stripCommand('modbreak', msgTxt)
             .trim();
 
-        modTxt = this.opModifier(modTxt, msgObj);
+        const isTrigger = (raid.exTrigger === false)?
+            this.isTrigger(modTxt, msgObj) : true;
 
-        this.raidLists.override(raidId, modTxt);
+        this.raidLists.override(raidId, modTxt, isTrigger);
         this.emitRaid(msgObj, raidId);
 
         const reply = MESSAGES.raid_changed
@@ -312,6 +324,10 @@ class RaidBot {
         
         let op = `**${raid.op}**\n`+
             MESSAGES.auto_join_msg.replace('{ID}', raidId);
+
+        if (raid.exTrigger) {
+            op = EX_TRIGGER_PREFIX + op;
+        }
 
         raid.users.map(u => {
             if (!counts.hasOwnProperty(u.team)) {

@@ -32,17 +32,26 @@ class RaidLists {
         return false;
     }
 
-    create(raidOP, userId) {
+    create(raidOP, userId, exTrigger = false) {
         this.hasReset = false;
         this.index++;
         
+        // Sanitize the OP
+        raidOP = raidOP
+            .replace(/`ex.+`/i, '')  // Remove trigger indicators
+            .replace(/ex-?/i, '')    // ...
+            .replace(/trigger/i, '') // ...
+            .replace('**', '') //  Remove bold tags
+            .trim();
+
         const raid = {
             id : this.index,
-            op: raidOP.trim().replace('**', ''),
+            op: raidOP,
             userId: userId,
             users: [],
             canceled: false,
             canceledBy: false,
+            exTrigger: exTrigger,
             date: Date.now()
         };
 
@@ -107,8 +116,17 @@ class RaidLists {
         return true;
     }
 
-    override(id, op) {
+    override(id, op, exTrigger = false) {
+        // Sanitize the OP
+        op = op
+            .replace(/`ex.+`/i, '')  // Remove trigger indicators
+            .replace(/ex-?/i, '')    // ...
+            .replace(/trigger/i, '') // ...
+            .replace('**', '') //  Remove bold tags
+            .trim();
+
         this.get(id).op = op;
+        this.get(id).exTrigger = exTrigger;
     }
 
     isValidId(id) {
