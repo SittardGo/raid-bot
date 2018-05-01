@@ -6,7 +6,7 @@ const RaidLists    = require('./RaidLists');
 const RaidStats    = require('./RaidStats');
 const RaidOverviews = require('./RaidOverviews');
 
-const DEV_MODE = false;
+const DEV_MODE = true;
 
 const MESSAGES = {
     missing_raid_id       : 'Raid nummer missend',
