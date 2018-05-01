@@ -21,8 +21,8 @@
     "discord.js": "^11.3.2",
     "erlpack": "github:hammerandchisel/erlpack",
     "eventbusjs": "^0.2.0",
-    "sittard-go-bot": "^1.2.0",
-    "uws": "^9.147.0"
+    "sittard-go-bot": "^1.2.1",
+    "uws": "^9.148.0"
   },
   "description": ""
 }

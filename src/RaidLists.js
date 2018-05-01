@@ -38,11 +38,11 @@ class RaidLists {
         
         // Sanitize the OP
         raidOP = raidOP
-            .replace(/`ex.+`/i, '')  // Remove trigger indicators
+            .replace(/!ex/i, '')     // Remove trigger indicators
+            .replace(/`ex.+`/i, '')  // ...
             .replace(/ex-?/i, '')    // ...
-            .replace(/!ex/i, '')    // ...
             .replace(/trigger/i, '') // ...
-            .replace('**', '') //  Remove bold tags
+            .replace('**', '')       //  Remove bold tags
             .trim();
 
         const raid = {
@@ -120,10 +120,11 @@ class RaidLists {
     override(id, op, exTrigger = false) {
         // Sanitize the OP
         op = op
-            .replace(/`ex.+`/i, '')  // Remove trigger indicators
+            .replace(/!ex/i, '')     // Remove trigger indicators
+            .replace(/`ex.+`/i, '')  // ...
             .replace(/ex-?/i, '')    // ...
             .replace(/trigger/i, '') // ...
-            .replace('**', '') //  Remove bold tags
+            .replace('**', '')       //  Remove bold tags
             .trim();
 
         this.get(id).op = op;

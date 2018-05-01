@@ -113,6 +113,20 @@ class RaidBot {
             return;
         }
 
+        // reconnect
+        if (MessageTests.is('reconnect', msgTxt)) {
+            const authId = this.bot.getMsgAuthorId(msgObj);
+            
+            if (authId !== this.bot.getAdminId('renzo')) {
+                return;
+            }
+
+            console.log('reconnecting...');
+            this.bot.reconnect();
+            
+            return
+        }
+
         // New List
         if (MessageTests.is('startraid', msgTxt)) {
             this.createRaid(msgObj, msgTxt);
