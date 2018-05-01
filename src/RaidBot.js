@@ -4,8 +4,9 @@ const SittardGoBot = require('sittard-go-bot');
 const MessageTests = require('./MessageTests');
 const RaidLists    = require('./RaidLists');
 const RaidStats    = require('./RaidStats');
+const RaidOverviews = require('./RaidOverviews');
 
-const DEV_MODE = false;
+const DEV_MODE = true;
 
 const MESSAGES = {
     missing_raid_id       : 'Raid nummer missend',
@@ -45,21 +46,24 @@ class RaidBot {
         }
         
         if (DEV_MODE) {
-            this.bot = new SittardGoBot.Bot(
-                require(__dirname+'/../config.dev.json')
-            );
+            this.config = require(__dirname+'/../config.dev.json')
+            this.bot = new SittardGoBot.Bot(this.config);
 
             this.bot.on('ERROR', function() {
                 process.exit(0);
             });
 
         } else {
-            this.bot = new SittardGoBot.Bot(
-                require(__dirname+'./../config.json')
-            );
+            this.config = require(__dirname+'./../config.json');
+            this.bot = new SittardGoBot.Bot(this.config);
         }
-            
+
         this.raidLists = new RaidLists();
+        this.raidOverviews = new RaidOverviews(
+            this.bot,
+            this.config['channel-ids']['raid-overviews']
+        );
+
         this.bot.on('MESSAGE', this.receiveMessage.bind(this));
 
         // Pulse to check for a raid lists reset
@@ -190,18 +194,9 @@ class RaidBot {
             this.isTrigger(raidOP, msgObj)
         );
 
-        // Testing raid stats
-        if (newId > 2 && DEV_MODE) {
-            this.raidLists.reset(true);
-            
-            RaidStats.writeLog(this.raidLists.prevLists);
-            RaidStats.emitStats(this.bot, 'raid');
-
-            return;
-        }
-
         console.log(`raid started by ${raidOG}: ${raidOP} (id: ${newId})`);
 
+        this.raidOverviews.create(newId, `\`${newId} \` ${raidOP}`);
         this.joinRaid(msgObj, newId, msgObj.author.id);
     }
 
@@ -233,6 +228,7 @@ class RaidBot {
             .replace('{ID}', raidId) +
             ` (${this.raidLists.getOP(raidId)})\n`;
         
+        this.raidOverviews.cancel(raidId);
         this.notifyRaiders(raidId, msgObj, reply);
     }
 
@@ -257,6 +253,7 @@ class RaidBot {
             .replace('{ID}', raidId) +
             ` (${this.raidLists.getOP(raidId)})\n`;
         
+        this.raidOverviews.unCancel(raidId);
         this.notifyRaiders(raidId, msgObj, reply);
     }
 
@@ -297,7 +294,6 @@ class RaidBot {
         }
 
         this.raidLists.join(raidId, msgObj.author.id, username, team);
-        
         this.emitRaid(msgObj, raidId);
     }
 
@@ -307,7 +303,6 @@ class RaidBot {
         if (!raid) {
             return;
         }
-
 
         const modTxt = MessageTests
             .stripCommand('modbreak', msgTxt)
@@ -323,6 +318,7 @@ class RaidBot {
             .replace('{ID}', raidId)
             .replace('{OP}', modTxt);
 
+        this.raidOverviews.mod(raidId, `\`${raidId} \` ${modTxt}`);
         this.notifyRaiders(raidId, msgObj, reply);
     }
 
@@ -350,7 +346,6 @@ class RaidBot {
 
             counts[u.team]++;
         });
-
 
         // User list
         let c = 0;
