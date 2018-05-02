@@ -196,7 +196,8 @@ class RaidBot {
 
         console.log(`raid started by ${raidOG}: ${raidOP} (id: ${newId})`);
 
-        this.raidOverviews.create(newId, `\`${newId} \` ${raidOP}`);
+        const idTxt = (String(newId).length < 2)? newId+' ' : newId;
+        this.raidOverviews.create(newId, `\`${idTxt}|\` ${raidOP}`);
         this.joinRaid(msgObj, newId, msgObj.author.id);
     }
 
@@ -318,7 +319,8 @@ class RaidBot {
             .replace('{ID}', raidId)
             .replace('{OP}', modTxt);
 
-        this.raidOverviews.mod(raidId, `\`${raidId} \` ${modTxt}`);
+        const idTxt = (String(raidId).length < 2)? raidId+' ' : raidId;
+        this.raidOverviews.mod(raidId, `\`${idTxt}|\` ${modTxt}`);
         this.notifyRaiders(raidId, msgObj, reply);
     }
 
