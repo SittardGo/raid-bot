@@ -161,7 +161,7 @@ class RaidLists {
         );
     }
 
-    reset(force = false) {
+    reset(overviews, force = false) {
         const currH = new Date().getHours();
         const state = this.hasReset;
         
@@ -173,6 +173,7 @@ class RaidLists {
             return false;
         }
 
+        overviews.cleanUp();
         this.prevLists = Object.assign([], this.lists);
         
         this.index = 0;

@@ -68,7 +68,7 @@ class RaidBot {
 
         // Pulse to check for a raid lists reset
         setInterval(_ => {
-            const hasReset = this.raidLists.reset();
+            const hasReset = this.raidLists.reset(this.raidOverviews);
             
             if (!hasReset) {
                 return;
