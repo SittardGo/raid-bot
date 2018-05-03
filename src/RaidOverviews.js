@@ -14,6 +14,7 @@ class RaidOverviews {
 
     cleanUp() {
         overviews.map(ch => {
+            console.log('cleaning', ch.id);
             ch.raids = [];
             const chObj = this.bot.getChannel(ch.id);
             if (!chObj) {

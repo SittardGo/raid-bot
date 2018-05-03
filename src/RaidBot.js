@@ -68,7 +68,7 @@ class RaidBot {
 
         // Pulse to check for a raid lists reset
         setInterval(_ => {
-            const hasReset = this.raidLists.reset(this.raidOverviews);
+            const hasReset = this.raidLists.reset();
             
             if (!hasReset) {
                 return;
@@ -76,6 +76,7 @@ class RaidBot {
             
             RaidStats.writeLog(this.raidLists.prevLists);
             RaidStats.emitStats(this.bot, 'raid');
+            this.raidOverviews.cleanUp();
             
             if (RaidStats.isLastDayOfMonth()) {
                 // RaidStats.emitMonthlyStats(this.bot, 'raid');
@@ -193,6 +194,17 @@ class RaidBot {
             msgObj.author.id,
             this.isTrigger(raidOP, msgObj)
         );
+
+        // Testing raid stats
+        if (newId > 2 && DEV_MODE) {
+            // this.raidLists.reset(true);
+            
+            // RaidStats.writeLog(this.raidLists.prevLists);
+            // RaidStats.emitStats(this.bot, 'raid');
+            // this.raidOverviews.cleanUp();
+
+            // return;
+        }
 
         console.log(`raid started by ${raidOG}: ${raidOP} (id: ${newId})`);
 
