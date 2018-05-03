@@ -15,6 +15,8 @@ const regex = {
     leaveraid: /^\-{1}\s*\d+/,
     // Moderator input is plus sign a number and the word mod
     modbreak: /^\+{1}\s*\d+\s*mod/i,
+    // Cleanup the overview channels
+    cleanup: /^\-{1}\s*cleanup/i,
     // Emit a raid stats for a specific date
     emitstats: /^\+{1}\s*emit\s*\d{4}\-\d{1,2}\-\d{1,2}/i,
     // Reconnect the bot

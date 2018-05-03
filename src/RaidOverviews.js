@@ -9,7 +9,6 @@ class RaidOverviews {
 
         channels.map(id => overviews.push({ id: id, raids: []}));
         this.bot = bot;
-        this.bot.on('READY', _ => { this.cleanUp(); });
     }
 
     cleanUp() {

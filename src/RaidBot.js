@@ -118,6 +118,19 @@ class RaidBot {
             return;
         }
 
+        // Cleanup the overview channels
+        if (MessageTests.is('cleanup', msgTxt)) {
+            const authId = this.bot.getMsgAuthorId(msgObj);
+            
+            if (authId !== this.bot.getAdminId('renzo')) {
+                return;
+            }
+            
+            console.log('manual overview cleanup...');
+            this.raidOverviews.cleanUp();
+            return;
+        }
+
         // reconnect
         if (MessageTests.is('reconnect', msgTxt)) {
             const authId = this.bot.getMsgAuthorId(msgObj);
