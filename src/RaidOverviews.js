@@ -21,7 +21,9 @@ class RaidOverviews {
                 return;
             }
 
-            chObj.bulkDelete(80);
+            chObj.bulkDelete(80)
+                .then(messages => console.log(`Bulk deleted ${messages.size} messages`))
+                .catch(console.error);
         });
     }
 
