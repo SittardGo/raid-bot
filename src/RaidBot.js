@@ -32,7 +32,7 @@ const ADD_TEAM_ICONS       = true;
 const REMOVE_COMMAND       = false;
 const RESET_CHECK_INTERVAL = 60*60*1000;
 const EX_TRIGGER_PREFIX    = '`EX-Trigger` ';
-const EX_COORD_ROLE        = 'ex-coordinators';
+const EX_COORD_ROLE        = 'ex-mods';
 
 class RaidBot {
 
