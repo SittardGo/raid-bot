@@ -44,6 +44,10 @@ class RaidStats {
             stats = this.getDailyStats(Date.now(), opIgnorePattern);
         }
 
+        if (!stats) {
+            return;
+        }
+
         /**
          * There is an android bug which will not
          * resolve @-mentions in a  rich embed.
