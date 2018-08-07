@@ -313,6 +313,10 @@ class RaidBot {
         let msgTxt = msgObj.content.trim();
         let team = false;
 
+        if(MessageTests.is("withAddition",msgTxt)){
+            username += ` ${msgTxt.substr(msgTxt.indexOf(",") + 1)}`;
+        }
+
         if (MessageTests.is('withLevelHint', msgTxt)) {
             const lvlMatch = msgTxt.match(/\d+\s*$/i);
             if (lvlMatch) {
