@@ -31,6 +31,8 @@ const regex = {
     getid: /^\-{1}\s*(\d+)|^\+{1}\s*(\d+)/,
     // Ends with the ex tag !EX
     withextag: /!ex$/i,
+    // With Additional text
+    withaddition: /[,]/,
     escape: /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g,
 };
 
