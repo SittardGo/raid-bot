@@ -202,6 +202,10 @@ class RaidBot {
         let raidOP = MessageTests.stripCommand('startraid', msgTxt).trim();
         let raidOG = this.bot.getMessageUsername(msgObj);
         
+        if (MessageTests.is('withLevelHint', raidOP)) {
+            raidOP = MessageTests.stripCommand('withLevelHint', raidOP);
+        }
+        
         const newId = this.raidLists.create(
             raidOP,
             msgObj.author.id,
@@ -305,9 +309,18 @@ class RaidBot {
     }
 
     joinRaid(msgObj, raidId) {
-        const username = this.bot.getMessageUsername(msgObj);
-        const msgTxt = msgObj.content.trim();
+        let username = this.bot.getMessageUsername(msgObj);
+        let msgTxt = msgObj.content.trim();
         let team = false;
+
+        if (MessageTests.is('withLevelHint', msgTxt)) {
+            const lvlMatch = msgTxt.match(/\d+\s*$/i);
+            if (lvlMatch) {
+                username += ` (lvl ${lvlMatch[0]})`;
+            }
+
+            msgTxt = MessageTests.stripCommand('withLevelHint', msgTxt);
+        }
 
         if (MessageTests.is('withTeamHint', msgTxt)) {
             switch(msgTxt.split('').pop().toLowerCase()) {

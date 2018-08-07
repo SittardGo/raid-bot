@@ -11,6 +11,8 @@ const regex = {
     joinraid: /^\+{1}\s*\d+/,
     // Join raid message has team hint
     withteamhint: /^\+\s*\d+\s*(v|i|m)$/i,
+    // Join a raid with a level hint
+    withlevelhint: /\s*=\s*\d+\s*$/i,
     // leave raid is 1 minus sign and a number (id) 
     leaveraid: /^\-{1}\s*\d+/,
     // Moderator input is plus sign a number and the word mod
