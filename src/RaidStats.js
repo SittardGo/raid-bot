@@ -193,11 +193,11 @@ class RaidStats {
 
             const currRaiders = [];
             raid.users.map(u => {
-                stats.teamCounts[u.team]++;
-
                 if (currRaiders.indexOf(u.userId) > -1) {
                     return;
                 }
+
+                stats.teamCounts[u.team]++;
                 
                 currRaiders.push(u.userId);
                 this.addOrIncrement(raiders, u.userId);
