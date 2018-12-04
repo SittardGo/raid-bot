@@ -18,10 +18,10 @@
   "license": "ISC",
   "dependencies": {
     "argparse": "^1.0.10",
-    "discord.js": "^11.3.2",
+    "discord.js": "^11.4.2",
     "erlpack": "github:hammerandchisel/erlpack",
     "eventbusjs": "^0.2.0",
-    "sittard-go-bot": "^1.2.7",
+    "sittard-go-bot": "^1.2.8",
     "uws": "^9.148.0"
   },
   "description": ""

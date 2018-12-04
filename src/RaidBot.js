@@ -1,4 +1,4 @@
-/* jshint esversion: 6 */ 
+/* jshint esversion: 6 */
 const fs           = require('fs');
 const SittardGoBot = require('sittard-go-bot');
 const MessageTests = require('./MessageTests');
@@ -44,7 +44,7 @@ class RaidBot {
             new SittardGoBot.Bot();
             process.exit(0);
         }
-        
+
         if (DEV_MODE) {
             this.config = require(__dirname+'/../config.dev.json')
             this.bot = new SittardGoBot.Bot(this.config);
@@ -64,20 +64,18 @@ class RaidBot {
             this.config['channel-ids']['raid-overviews']
         );
 
-        this.bot.on('MESSAGE', this.receiveMessage.bind(this));
-
         // Pulse to check for a raid lists reset
         setInterval(_ => {
             const hasReset = this.raidLists.reset();
-            
+
             if (!hasReset) {
                 return;
             }
-            
+
             RaidStats.writeLog(this.raidLists.prevLists);
             RaidStats.emitStats(this.bot, 'raid');
             this.raidOverviews.cleanUp();
-            
+
             if (RaidStats.isLastDayOfMonth()) {
                 // RaidStats.emitMonthlyStats(this.bot, 'raid');
             }
@@ -86,12 +84,22 @@ class RaidBot {
 
         this.bot.connect()
             .then(_ => {
-                // for test invoking
+                this.bot.on('RECONNECT', () => {
+                    this.initListening();
+                });
+
+                this.initListening();
             })
             .catch(e => console.log('error', e));
     }
 
-    receiveMessage(e, msgObj) {
+    initListening() {
+        this.bot.getClient().on('message', message => {
+            this.receiveMessage(message)
+        });
+    }
+
+    receiveMessage(msgObj) {
         const msgTxt = msgObj.content.trim();
 
         if (!MessageTests.is('command', msgTxt)) {
@@ -101,7 +109,7 @@ class RaidBot {
         // Emit stats of specific date
         if (MessageTests.is('emitStats', msgTxt)) {
             const authId = this.bot.getMsgAuthorId(msgObj);
-            
+
             if (authId !== this.bot.getAdminId('renzo')) {
                 return;
             }
@@ -121,11 +129,11 @@ class RaidBot {
         // Cleanup the overview channels
         if (MessageTests.is('cleanup', msgTxt)) {
             const authId = this.bot.getMsgAuthorId(msgObj);
-            
+
             if (authId !== this.bot.getAdminId('renzo')) {
                 return;
             }
-            
+
             console.log('manual overview cleanup...');
             this.raidOverviews.cleanUp();
             return;
@@ -134,14 +142,14 @@ class RaidBot {
         // reconnect
         if (MessageTests.is('reconnect', msgTxt)) {
             const authId = this.bot.getMsgAuthorId(msgObj);
-            
+
             if (authId !== this.bot.getAdminId('renzo')) {
                 return;
             }
 
             console.log('reconnecting...');
             this.bot.reconnect();
-            
+
             return
         }
 
@@ -153,7 +161,7 @@ class RaidBot {
         }
 
         const raidId = MessageTests.extractId(msgTxt);
-        
+
         // Uncancel raid
         if (MessageTests.is('uncancel', msgTxt) && raidId) {
             this.unCancelRaid(msgObj, raidId);
@@ -189,7 +197,7 @@ class RaidBot {
             const resLeave = this.raidLists.leave(
                 raidId, msgObj.author.id
             );
-            
+
             if (resLeave) {
                 this.emitRaid(msgObj, raidId);
             }
@@ -201,11 +209,11 @@ class RaidBot {
     createRaid(msgObj, msgTxt) {
         let raidOP = MessageTests.stripCommand('startraid', msgTxt).trim();
         let raidOG = this.bot.getMessageUsername(msgObj);
-        
+
         if (MessageTests.is('withLevelHint', raidOP)) {
             raidOP = MessageTests.stripCommand('withLevelHint', raidOP);
         }
-        
+
         const newId = this.raidLists.create(
             raidOP,
             msgObj.author.id,
@@ -215,7 +223,7 @@ class RaidBot {
         // Testing raid stats
         if (newId > 2 && DEV_MODE) {
             // this.raidLists.reset(true);
-            
+
             // RaidStats.writeLog(this.raidLists.prevLists);
             // RaidStats.emitStats(this.bot, 'raid');
             // this.raidOverviews.cleanUp();
@@ -257,7 +265,7 @@ class RaidBot {
         let reply = MESSAGES.raid_cancelled
             .replace('{ID}', raidId) +
             ` (${this.raidLists.getOP(raidId)})\n`;
-        
+
         this.raidOverviews.cancel(raidId);
         this.notifyRaiders(raidId, msgObj, reply);
     }
@@ -282,7 +290,7 @@ class RaidBot {
         let reply = MESSAGES.raid_uncancelled
             .replace('{ID}', raidId) +
             ` (${this.raidLists.getOP(raidId)})\n`;
-        
+
         this.raidOverviews.unCancel(raidId);
         this.notifyRaiders(raidId, msgObj, reply);
     }
@@ -338,7 +346,7 @@ class RaidBot {
 
     doModBreak(msgObj, raidId, msgTxt) {
         const raid = this.raidLists.get(raidId);
-        
+
         if (!raid) {
             return;
         }
@@ -371,7 +379,7 @@ class RaidBot {
         }
 
         const counts = { valor: 0, instinct: 0, mystic: 0 };
-        
+
         let op = `**${raid.op}**\n`+
             MESSAGES.auto_join_msg.replace('{ID}', raidId);
 
@@ -394,7 +402,7 @@ class RaidBot {
             txt += '\n';
 
             let txtC = (String(c).length < 2)? c+' ' : c;
-            
+
             return txt+`\`${txtC}|\` ${u.username}`;
         }, '');
 
@@ -407,9 +415,9 @@ class RaidBot {
             }
             fTxt += ` ${this.getTeamFooter(c)} ${counts[c]}`;
         }
-        
+
         op += `\n\u200B\n*${fTxt.trim()}*`;
-        
+
         let color = COLORS.grey;
         switch(leadingTeam) {
             case 'valor'    : color = COLORS.red; break;
@@ -441,7 +449,7 @@ class RaidBot {
 
     emitInvalid(searchRes, msgObj, raidId) {
         const msg = (searchRes.reason === 'canceled') ?
-            MESSAGES.invalid_canceled_raid: 
+            MESSAGES.invalid_canceled_raid:
             MESSAGES.invalid_raid_id;
 
         this.bot.reply(msgObj, msg.replace('{ID}', raidId));

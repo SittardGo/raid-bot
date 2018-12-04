@@ -1,4 +1,4 @@
-/* jshint esversion: 6 */ 
+/* jshint esversion: 6 */
 const fs = require('fs');
 
 const RESET_START_TIME = 20;
@@ -17,25 +17,25 @@ class RaidLists {
             this.lists = require(RECOVER_FILE);
             this.hasReset = false;
             this.index = this.lists.length;
-            
+
             fs.unlinkSync(RECOVER_FILE);
         }
     }
 
-    get(id) {       
+    get(id) {
         for (var i = this.lists.length - 1; i >= 0; i--) {
             if (this.lists[i].id === id) {
                 return this.lists[i];
             }
         }
-        
+
         return false;
     }
 
     create(raidOP, userId, exTrigger = false) {
         this.hasReset = false;
         this.index++;
-        
+
         // Sanitize the OP
         raidOP = raidOP
             .replace(/!ex/i, '')     // Remove trigger indicators
@@ -57,7 +57,7 @@ class RaidLists {
         };
 
         this.lists.push(raid);
-       
+
         return this.index;
     }
 
@@ -133,7 +133,7 @@ class RaidLists {
 
     isValidId(id) {
         const list = this.get(id);
-        
+
         if (list === false) {
             return { valid: false, reason: 'invalid' };
         }
@@ -164,7 +164,7 @@ class RaidLists {
     reset(force = false) {
         const currH = new Date().getHours();
         const state = this.hasReset;
-        
+
         if (
             currH > RESET_END_TIME &&
             currH < RESET_START_TIME &&
@@ -174,7 +174,7 @@ class RaidLists {
         }
 
         this.prevLists = Object.assign([], this.lists);
-        
+
         this.index = 0;
         this.lists = [];
         this.hasReset = true;
