@@ -10,11 +10,15 @@ const regex = {
     // Join raid is 1 plus sign and a number (id)
     joinraid: /^\+{1}\s*\d+/,
     // Join raid message has team hint
-    withteamhint: /^\+\s*\d+\s*(v|i|m)$/i,
+    withteamhint: /^\+\s*\d+\s*(v|i|m|r)$/i,
     // Join a raid with a level hint
-    withlevelhint: /\s*=\s*\d+\s*$/i,
+    withlevelhint: /\s*=\s*([0-9]|[0-5][0-9])\s*$/i,
+    // Join a raid with a remote hint
+    withremotehint: /\s*=\s*(r.*|i.*)\s*\.*$/i,
     // leave raid is 1 minus sign and a number (id) 
     leaveraid: /^\-{1}\s*\d+/,
+	// Inform people of the starttime
+    starttime: /^\+{1}\s*\d+\s*start/i,
     // Moderator input is plus sign a number and the word mod
     modbreak: /^\+{1}\s*\d+\s*mod/i,
     // Cleanup the overview channels
