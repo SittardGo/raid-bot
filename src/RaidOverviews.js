@@ -53,6 +53,18 @@ class RaidOverviews {
         });
     }
 
+    starttime(raidId) {
+        overviews.map(ch => {
+            ch.raids.map(r => {
+                if (r.raidId !== raidId) {
+                    return;
+                }
+
+                r.msg.edit(`${r.msg} **started**`);
+            });
+        });
+    }
+
     unCancel(raidId) {
         overviews.map(ch => {
             ch.raids.map(r => {

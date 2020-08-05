@@ -155,7 +155,8 @@ class RaidStats {
             teamCounts: {
                 valor: 0,
                 instinct: 0,
-                mystic: 0
+                mystic: 0,
+                remote: 0
             },
             canceledRaids: 0,
         };

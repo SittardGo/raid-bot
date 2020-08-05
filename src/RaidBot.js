@@ -15,6 +15,8 @@ const MESSAGES = {
     raid_emition_fail     : 'Er is iets mis gegaan contacteer een Administrator',
     count_users           : 'Deelnemers: **{COUNT}**',
     auto_join_msg         : '`(auto-join met +{ID})`',
+    start_time       	  : 'De lobby voor Raid nr. **{ID}** wordt **NU gestart**. Succes!',
+	remote_limit       	  : 'Let Op! Te veel remote raiders ingeschreven voor Raid nr. **{ID}** Er zijn maximaal 10 remote raiders toegestaan per lobby door Niantic',
     raid_cancelled        : 'Raid nr. **{ID}** gecanceld',
     raid_uncancelled      : 'Raid nr. **{ID}** is weer actief!',
     raid_err_uncancelled  : 'Vraag een mod om een gecancelde raid te hervatten',
@@ -25,6 +27,7 @@ const COLORS = {
     yellow : '15844367',
     blue   : '3447003',
     red    : '15158332',
+    purple : '10181046',
     grey   : '0',
 };
 
@@ -184,6 +187,10 @@ class RaidBot {
         if (MessageTests.is('modbreak', msgTxt)) {
             this.doModBreak(msgObj, raidId, msgTxt);
 
+        // Starttime
+        } else if (MessageTests.is('starttime', msgTxt)) {
+            this.StartTime(msgObj, raidId, msgTxt);
+
         // Cancel raid
         } else if (MessageTests.is('cancelraid', msgTxt)) {
             this.cancelRaid(msgObj, raidId);
@@ -214,6 +221,10 @@ class RaidBot {
             raidOP = MessageTests.stripCommand('withLevelHint', raidOP);
         }
 
+        if (MessageTests.is('withRemoteHint', raidOP)) {
+            raidOP = MessageTests.stripCommand('withRemoteHint', raidOP);
+        }
+        
         const newId = this.raidLists.create(
             raidOP,
             msgObj.author.id,
@@ -267,6 +278,25 @@ class RaidBot {
             ` (${this.raidLists.getOP(raidId)})\n`;
 
         this.raidOverviews.cancel(raidId);
+        this.notifyRaiders(raidId, msgObj, reply);
+    }
+
+    StartTime(msgObj, raidId) {
+        const res = this.raidLists.starttime(raidId, msgObj.author.id);
+        if (!res) {
+            return;
+        }
+
+        console.log(
+            `Raid ${raidId} Started by: `+
+            this.bot.getMessageUsername(msgObj)
+        );
+
+        let reply = MESSAGES.start_time
+            .replace('{ID}', raidId) +
+            ` (${this.raidLists.getOP(raidId)})\n`;
+
+        this.raidOverviews.starttime(raidId);
         this.notifyRaiders(raidId, msgObj, reply);
     }
 
@@ -330,12 +360,20 @@ class RaidBot {
             msgTxt = MessageTests.stripCommand('withLevelHint', msgTxt);
         }
 
+        if (MessageTests.is('withRemoteHint', msgTxt)) {
+            team = 'remote'; username += ` (${msgTxt.substr(msgTxt.indexOf("=") + 0)
+		    .replace(/\=\s*r.*/i,"remote").replace(/\=\s*i\s*/i,"invite ").replace("\s*"," ")})`;
+        }
+        
         if (MessageTests.is('withTeamHint', msgTxt)) {
             switch(msgTxt.split('').pop().toLowerCase()) {
                 case 'v': team = 'valor'; break;
                 case 'i': team = 'instinct'; break;
                 case 'm': team = 'mystic'; break;
+                case 'r': team = 'remote'; username += ` (remote)`;  break;
             }
+		} else if ( team == 'remote') {
+            team = 'remote';
         } else {
             team = this.bot.getTeamOfMember(msgObj.member);
         }
@@ -378,7 +416,7 @@ class RaidBot {
             return;
         }
 
-        const counts = { valor: 0, instinct: 0, mystic: 0 };
+        const counts = { valor: 0, instinct: 0, mystic: 0 , remote: 0, re_counter: 10}};
 
         let op = `**${raid.op}**\n`+
             MESSAGES.auto_join_msg.replace('{ID}', raidId);
@@ -392,7 +430,13 @@ class RaidBot {
                 return;
             }
 
-            counts[u.team]++;
+//            counts[u.team]++;
+            if ( u.team == 'remote') {
+                counts['remote']++;
+		        counts['re_counter']--;
+		        }
+     	    else {counts[u.team]++;
+		    }
         });
 
         // User list
@@ -413,16 +457,24 @@ class RaidBot {
                 leadingCount = counts[c];
                 leadingTeam = c;
             }
-            fTxt += ` ${this.getTeamFooter(c)} ${counts[c]}`;
+//          fTxt += ` ${this.getTeamFooter(c)} ${counts[c]}`;
+            if (counts[c] < 0) { fTxt += ` ${this.getTeamFooter(c)} ${counts[c]} (dus te weinig)`;
+				let reply = MESSAGES.remote_limit
+				.replace('{ID}', raidId) +
+				` (${this.raidLists.getOP(raidId)})\n`;
+				this.notifyRaiders(raidId, msgObj, reply);
+			}
+     	    else {fTxt += ` ${this.getTeamFooter(c)} ${counts[c]}`;}
         }
 
-        op += `\n\u200B\n*${fTxt.trim()}*`;
+        op += `\n\u200B\n*${fTxt.trim()}* *remote plaatsen beschikbaar.*`;
 
         let color = COLORS.grey;
         switch(leadingTeam) {
             case 'valor'    : color = COLORS.red; break;
             case 'instinct' : color = COLORS.yellow; break;
             case 'mystic'   : color = COLORS.blue; break;
+            case 'remote'   : color = COLORS.purple; break;
         }
 
         const card = this.bot.createEmbed({
@@ -437,7 +489,12 @@ class RaidBot {
     getTeamFooter(name) {
         const icon = (ADD_TEAM_ICONS)?
             this.bot.getTeamIcon(name) : ' ';
-
+	if (name == 're_counter') {
+        name = icon + '' + '\nEr zijn nog'
+            name.charAt(0).toUpperCase() +
+            name.slice(1);
+        return name;
+	} else {
         name = icon + ' ' +
             name.charAt(0).toUpperCase() +
             name.slice(1);
@@ -446,6 +503,7 @@ class RaidBot {
         // Now only returning the icon
         return icon;
     }
+}
 
     emitInvalid(searchRes, msgObj, raidId) {
         const msg = (searchRes.reason === 'canceled') ?
