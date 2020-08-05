@@ -105,6 +105,18 @@ class RaidLists {
         return true;
     }
 
+    starttime(id, userId) {
+        const raid = this.get(id);
+        if (!raid) {
+            return false;
+        }
+
+        raid.canceled = false;
+        raid.canceledBy = userId;
+
+        return true;
+    }
+
     unCancel(id) {
         const raid = this.get(id);
         if (!raid) {
