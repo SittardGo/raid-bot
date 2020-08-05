@@ -32,7 +32,10 @@ $ node index.js
   * Create a raid: `++ [raid text]`
   * Join a raid: `+ [raid id]`
   * Join a raid on team Instinct: `+ [raid id] i`
+  * Join a raid with a level 12 acount: `+ [raid id] =12`
+  * Join a raid as remote player: `+ [raid id] r` or `+ [raid id] =r`
   * Leave a raid: `- [raid id]`
-  * Cancel a raid: `- cancel [raid id]`
-  * Uncancel a raid: `+ uncancel [raid id]`
+  * Cancel a raid: `- [raid id] cancel`
+  * Uncancel a raid: `+ [raid id] uncancel `
   * Edit raid text: `+ mod [raid text]`
+  * let other (remote) players know to join the lobby: `+ [raid id] start`
